@@ -106,7 +106,7 @@ test_with_fcst = test_with_fcst.merge(sf_fcst.reset_index(), on=['unique_id', 'd
 # EVALUATION
 evaluation_df = evaluate(test_with_fcst, [partial(mase, seasonality=freq_int), smape], train_df=train)
 
-evaluation_df.to_csv('assets/results')
+evaluation_df.to_csv('assets/results/results.csv', index=False)
 
 print(evaluation_df.query('metric=="mase"').mean(numeric_only=True))
 print(evaluation_df.query('metric=="smape"').mean(numeric_only=True))
