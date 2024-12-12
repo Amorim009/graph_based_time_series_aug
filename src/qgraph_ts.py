@@ -7,8 +7,10 @@ import pandas as pd
 
 from statsmodels.tsa.seasonal import STL
 
+from metaforecast.synth.generators.base import SemiSyntheticGenerator
 
-class QuantileGraphGenerator:
+
+class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
 
     def __init__(self,
                  n_quantiles: int,
@@ -17,6 +19,8 @@ class QuantileGraphGenerator:
                  ensemble_transitions: bool,
                  ensemble_size: int = 5,
                  robust: bool = False):
+
+        super().__init__(alias='QGTS')
 
         self.n_quantiles = n_quantiles
         self.quantile_on = quantile_on
@@ -28,7 +32,7 @@ class QuantileGraphGenerator:
         self.ensemble_size = ensemble_size
         self.ensemble_transition_mats = {}
 
-    def transform(self, df: pd.DataFrame):
+    def transform(self, df: pd.DataFrame, **kwargs):
         df_ = df.copy()
 
         df_ = self.decompose_tsd(df_, period=self.period, robust=self.robust)
@@ -39,12 +43,15 @@ class QuantileGraphGenerator:
         if self.ensemble_transitions:
             self.ensemble_transition_mats = self._get_ensemble_transition_mats()
 
-        q_series = self.generate_quantile_series(df_)
+        synth_ts_dict = self._create_synthetic_ts(df_)
 
-        synth_ts = self.generate_ts(df_, q_series)
+        synth_df = self._postprocess_df(df_, synth_ts_dict)
 
+        return synth_df
+
+    def _postprocess_df(self, df: pd.DataFrame, synth_ts: Dict):
         synth_list = []
-        for uid, uid_df in df_.groupby('unique_id'):
+        for uid, uid_df in df.groupby('unique_id'):
             uid_df[self.quantile_on] = synth_ts[uid].values
             synth_list.append(uid_df)
 
@@ -53,16 +60,17 @@ class QuantileGraphGenerator:
         synth_df['y'] = synth_df[['trend', 'seasonal', 'remainder']].sum(axis=1)
         synth_df = synth_df.drop(columns=['trend', 'seasonal', 'remainder', 'Quantile'])
 
-        synth_df['unique_id'] = synth_df['unique_id'].apply(lambda x: f'QTS_{x}')
+        synth_df['unique_id'] = synth_df['unique_id'].apply(lambda x: f'{self.alias}_{x}')
         synth_df = synth_df[['ds', 'unique_id', 'y']]
 
         return synth_df
 
-    def generate_ts(self, df: pd.DataFrame, quantile_series: Dict):
+    def _create_synthetic_ts(self, df: pd.DataFrame) -> Dict:
+        quantile_series = self._generate_quantile_series(df)
+
         generated_time_series = {}
 
         uids = df['unique_id'].unique().tolist()
-
         for uid in uids:
             uid_df = df.query(f'unique_id=="{uid}"')
             uid_s = uid_df[self.quantile_on]
@@ -85,7 +93,7 @@ class QuantileGraphGenerator:
 
         return generated_time_series
 
-    def generate_quantile_series(self, df: pd.DataFrame):
+    def _generate_quantile_series(self, df: pd.DataFrame):
         uids = df['unique_id'].unique().tolist()
 
         quantile_series = {}
