@@ -71,6 +71,7 @@ qgts_gen = QGTSGen(n_quantiles=10,
 qgtse_gen = QGTSGen(n_quantiles=10,
                     quantile_on='remainder',
                     period=freq_int,
+                    ensemble_size=25,
                     ensemble_transitions=True)
 
 qgts_df = qgts_gen.transform(train)
@@ -106,7 +107,7 @@ test_with_fcst = test_with_fcst.merge(sf_fcst.reset_index(), on=['unique_id', 'd
 # EVALUATION
 evaluation_df = evaluate(test_with_fcst, [partial(mase, seasonality=freq_int), smape], train_df=train)
 
-evaluation_df.to_csv('assets/results/results.csv', index=False)
+evaluation_df.to_csv(f'assets/results/{data_name}_{group}_{MODEL}.csv', index=False)
 
 print(evaluation_df.query('metric=="mase"').mean(numeric_only=True))
 print(evaluation_df.query('metric=="smape"').mean(numeric_only=True))

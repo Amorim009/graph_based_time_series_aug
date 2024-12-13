@@ -33,6 +33,9 @@ class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
         self.ensemble_transition_mats = {}
 
     def transform(self, df: pd.DataFrame, **kwargs):
+
+        # df2 = self.diff(df)
+
         df_ = df.copy()
 
         df_ = self.decompose_tsd(df_, period=self.period, robust=self.robust)
@@ -46,6 +49,8 @@ class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
         synth_ts_dict = self._create_synthetic_ts(df_)
 
         synth_df = self._postprocess_df(df_, synth_ts_dict)
+
+        # df2 = self.undo_diff(df)
 
         return synth_df
 
