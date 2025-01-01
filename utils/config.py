@@ -6,9 +6,12 @@ from metaforecast.synth import (SeasonalMBB,
                                 TimeWarping,
                                 DBA,
                                 TSMixup)
+from pytorch_lightning import Trainer
 
-MODEL = 'NHITS'
-ACCELERATOR = 'mps'
+trainer = Trainer(accelerator='cpu')
+
+MODEL = 'MLP'
+ACCELERATOR = 'cpu'
 
 MODELS = {
     'NHITS': NHITS,

@@ -1,3 +1,7 @@
+import sys
+sys.path.append(r'C:\Users\lhenr\Desktop\graph_based_time_series_aug')
+
+
 import numpy as np
 import pandas as pd
 
@@ -7,13 +11,19 @@ from statsforecast import StatsForecast
 from utilsforecast.losses import mase, smape
 from utilsforecast.evaluation import evaluate
 from functools import partial
-
+ 
 from utils.load_data.config import DATASETS
 from utils.load_data.config import DATA_GROUPS
 from utils.config import SYNTH_METHODS, MODEL_CONFIG, MODEL, MODELS
 from src.workflow import ExpWorkflow
 from utils.load_data.base import LoadDataset
 from src.qgraph_ts import QuantileGraphTimeSeriesGenerator as QGTSGen
+from pytorch_lightning import Trainer
+
+trainer = Trainer(accelerator='cpu')
+
+
+
 
 data_name, group = DATA_GROUPS[4]
 print(data_name, group)
@@ -70,8 +80,8 @@ qgts_gen = QGTSGen(n_quantiles=10,
 
 qgtse_gen = QGTSGen(n_quantiles=10,
                     quantile_on='remainder',
-                    period=freq_int,
-                    ensemble_size=25,
+                    period=freq_int, 
+                    ensemble_size=10,
                     ensemble_transitions=True)
 
 qgts_df = qgts_gen.transform(train)
