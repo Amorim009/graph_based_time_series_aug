@@ -73,7 +73,7 @@ training_sets['original'] = train.copy()
 
 # METHOD
 
-qgts_gen = QGTSGen(n_quantiles=10,
+qgts_gen = QGTSGen(n_quantiles=5,
                    quantile_on='remainder',
                    period=freq_int,
                    ensemble_transitions=False)
@@ -81,7 +81,7 @@ qgts_gen = QGTSGen(n_quantiles=10,
 qgtse_gen = QGTSGen(n_quantiles=10,
                     quantile_on='remainder',
                     period=freq_int, 
-                    ensemble_size=10,
+                    ensemble_size=5,
                     ensemble_transitions=True)
 
 qgts_df = qgts_gen.transform(train)

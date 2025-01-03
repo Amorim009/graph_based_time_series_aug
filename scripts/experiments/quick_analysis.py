@@ -42,5 +42,11 @@ df.query('model=="NHITS"').groupby('ds').mean(numeric_only=True).rank(axis=1).me
 df.query('model=="NHITS"').drop(columns=['ds','model']).rank(axis=1).mean().sort_values()
 
 
+import matplotlib.pyplot as plt
+df.groupby('ds').mean(numeric_only=True).plot(kind='bar')
+plt.title('Mean Performance per Dataset')
+plt.legend(loc='upper left', bbox_to_anchor=(1.0, 1.0))
+plt.tight_layout()
+plt.show()
 
 
