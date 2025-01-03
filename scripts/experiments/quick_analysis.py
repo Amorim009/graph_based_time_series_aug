@@ -35,12 +35,22 @@ df.groupby('ds').mean(numeric_only=True)
 df.groupby('ds').mean(numeric_only=True).rank(axis=1).mean().sort_values()
 
 
+a = df.query('model=="NHITS"').groupby('ds').mean(numeric_only=True)
 
-df.query('model=="NHITS"').groupby('ds').mean(numeric_only=True)
+
+b=df.query('model=="NHITS"').drop(columns=['model','ds'])
+b.rank(axis=1).mean().sort_values()
+
 df.query('model=="NHITS"').groupby('ds').mean(numeric_only=True).rank(axis=1).mean().sort_values()
 
 df.query('model=="NHITS"').drop(columns=['ds','model']).rank(axis=1).mean().sort_values()
 
 
+# 1 - encontrar set de parametros robustos
+# 2 - correr de novo as experiencias com essa configuração
+# 3 - analise de sensibilidade - diferentes variantes do qgts e analisas desempenho
+#### 3,5,10,15,25,50,100
+#### focar num modelo
+##### isto e para o no de quantis, ... quantile on, ensemlbe (tamanho)
 
 
