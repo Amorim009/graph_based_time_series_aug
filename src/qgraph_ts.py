@@ -231,3 +231,207 @@ class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
         decomposed_df = pd.merge(decomposed_df, remainder_df, on=['unique_id', 'ds'])
 
         return decomposed_df
+
+class QuantileDerivedTimeSeriesGenerator:
+    def __init__(self, n_quantiles: int, ensemble_transitions: bool, ensemble_size: int = 0):
+        """
+        Initialize the generator.
+        
+        Args:
+            n_quantiles (int): Number of quantiles for binning the differenced series.
+            ensemble_transitions (bool): Whether to use ensemble transition matrices.
+            ensemble_size (int): Number of similar series to include in the ensemble transition matrix.
+        """
+        self.n_quantiles = n_quantiles
+        self.ensemble_transitions = ensemble_transitions
+        self.ensemble_size = ensemble_size
+        self.transition_mats = {}
+        self.ensemble_transition_mats = {}
+        self.uid_pw_distance = {}
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Generate synthetic time series.
+        
+        Args:
+            df (pd.DataFrame): Input time series with columns ['ds', 'unique_id', 'y'].
+        
+        Returns:
+            pd.DataFrame: Synthetic time series with the same structure.
+        """
+        # Step 1: Calculate differences
+        df_diff = self._difference_series(df)
+
+        # Step 2: Quantile binning
+        df_diff['Quantile'] = self._get_quantiles(df_diff)
+
+        # Step 3: Transition matrix
+        self._calc_transition_matrix(df_diff)
+        if self.ensemble_transitions:
+            self.ensemble_transition_mats = self._get_ensemble_transition_mats()
+
+        # Step 4: Generate synthetic quantile series
+        synth_quantile_series = self._generate_quantile_series(df_diff)
+
+        # Step 5: Generate synthetic differenced series
+        synth_diff_dict = self._create_synthetic_diff_series(df_diff, synth_quantile_series)
+
+        # Step 6: Integrate to reconstruct original series
+        synth_df = self._integrate_series(df, synth_diff_dict)
+
+        return synth_df
+
+    def _difference_series(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Compute first-order differences of the series.
+        """
+        df_diff = df.copy()
+        df_diff['diff'] = df.groupby('unique_id')['y'].diff()
+        df_diff.dropna(subset=['diff'], inplace=True)  # Remove rows where diff is NaN
+        return df_diff
+
+    def _get_quantiles(self, df: pd.DataFrame) -> pd.Series:
+        """
+        Divide the differenced series into quantiles.
+        """
+        return df.groupby('unique_id')['diff'].transform(
+            lambda x: pd.qcut(x, self.n_quantiles, labels=False, duplicates='drop')
+        )
+
+    def _calc_transition_matrix(self, df: pd.DataFrame):
+        assert 'Quantile' in df.columns
+
+        for unique_id, group in df.groupby('unique_id'):
+            quantiles = group['Quantile'].values
+
+            t_count_matrix = np.zeros((self.n_quantiles, self.n_quantiles))
+
+            # Loop through the quantiles and count transitions
+            for i in range(len(quantiles) - 1):
+                current_quantile = quantiles[i]
+                next_quantile = quantiles[i + 1]
+                t_count_matrix[current_quantile, next_quantile] += 1
+
+            # Normalize the rows to get probabilities
+            t_prob_matrix = t_count_matrix / t_count_matrix.sum(axis=1, keepdims=True)
+            t_prob_matrix = np.nan_to_num(t_prob_matrix)  # Handle rows with sum zero
+
+            # Ensure rows with all zeros are replaced with uniform probabilities
+            for row in range(self.n_quantiles):
+                if np.sum(t_count_matrix[row]) == 0:  # Row with no transitions
+                    t_prob_matrix[row] = np.ones(self.n_quantiles) / self.n_quantiles
+
+            self.transition_mats[unique_id] = t_prob_matrix
+
+        return self.transition_mats
+
+
+    def _get_ensemble_transition_mats(self):
+        # Copy transition matrices for safety
+        mats = copy.deepcopy(self.transition_mats)
+
+        # Initialize pairwise distances dictionary
+        self.uid_pw_distance = {}
+
+        # Compute pairwise distances between all unique_ids
+        uid_pairs = combinations(mats.keys(), 2)
+
+        for uid1, uid2 in uid_pairs:
+            mat1 = mats[uid1]
+            mat2 = mats[uid2]
+            
+            # Calculate Euclidean distance between transition matrices
+            dist = np.linalg.norm(mat1 - mat2)
+            
+            # Store distances bidirectionally
+            self.uid_pw_distance[(uid1, uid2)] = dist
+            self.uid_pw_distance[(uid2, uid1)] = dist
+
+        # Add zero distance for self comparisons
+        for uid in mats:
+            self.uid_pw_distance[(uid, uid)] = 0.0
+
+        # Create ensemble transition matrices
+        ensemble_mats = {}
+        for uid in mats:
+            # Get distances of current uid to all others
+            uid_dists = pd.Series({
+                other_uid: self.uid_pw_distance[(uid, other_uid)]
+                for other_uid in mats
+            })
+
+            # Select the most similar series based on distance
+            similar_uids = uid_dists.nsmallest(self.ensemble_size).index.tolist()
+
+            # Average the transition matrices of similar series
+            avg_mat = np.mean([mats[similar_uid] for similar_uid in similar_uids], axis=0)
+
+            # Store the ensemble transition matrix
+            ensemble_mats[uid] = avg_mat
+
+        return ensemble_mats
+
+
+    def _generate_quantile_series(self, df: pd.DataFrame) -> Dict:
+        """
+        Generate synthetic quantile series using the transition matrix.
+        """
+        quantile_series = {}
+        for uid, group in df.groupby('unique_id'):
+            if self.ensemble_transitions:
+                transition_mat = self.ensemble_transition_mats[uid]
+            else:
+                transition_mat = self.transition_mats[uid]
+
+            original_quantiles = group['Quantile'].values
+            q_series = np.zeros(len(original_quantiles), dtype=int)
+
+            q_series[0] = original_quantiles[0]  # Start with the first quantile
+
+            for t in range(1, len(q_series)):
+                current_quantile = q_series[t - 1]
+                next_quantile = np.random.choice(self.n_quantiles, p=transition_mat[current_quantile])
+                q_series[t] = next_quantile
+
+            quantile_series[uid] = q_series
+
+        return quantile_series
+
+    def _create_synthetic_diff_series(self, df: pd.DataFrame, quantile_series: Dict) -> Dict:
+        """
+        Generate synthetic differenced series based on the synthetic quantile series.
+        """
+        generated_diff_series = {}
+        for uid, group in df.groupby('unique_id'):
+            quantiles = group['Quantile']
+            diff_values = group['diff']
+            q_series = quantile_series[uid]
+
+            q_bins = {q: diff_values[quantiles == q].values for q in range(self.n_quantiles)}
+
+            synth_diff = np.zeros(len(q_series))
+            for i, q in enumerate(q_series):
+                if len(q_bins[q]) > 0:
+                    synth_diff[i] = np.random.choice(q_bins[q])
+                else:
+                    synth_diff[i] = 0  # Fallback to 0 if bin is empty
+
+            generated_diff_series[uid] = pd.Series(synth_diff, index=group.index)
+
+        return generated_diff_series
+
+    def _integrate_series(self, df: pd.DataFrame, synth_diff_dict: Dict) -> pd.DataFrame:
+        """
+        Integrate the synthetic differenced series to reconstruct the original scale.
+        """
+        synth_list = []
+        for uid, group in df.groupby('unique_id'):
+            original_y = group['y'].iloc[0]  # Starting value
+            synth_diff = synth_diff_dict[uid]
+
+            synthetic_y = np.cumsum(np.insert(synth_diff.values, 0, original_y))
+            group['y'] = synthetic_y
+            synth_list.append(group)
+
+        synth_df = pd.concat(synth_list)
+        return synth_df[['ds', 'unique_id', 'y']]

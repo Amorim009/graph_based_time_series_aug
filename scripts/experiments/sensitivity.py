@@ -18,15 +18,11 @@ from utils.config import SYNTH_METHODS, MODEL_CONFIG, MODEL, MODELS
 from src.workflow import ExpWorkflow
 from utils.load_data.base import LoadDataset
 from src.qgraph_ts import QuantileGraphTimeSeriesGenerator as QGTSGen
-from src.qgraph_ts import QuantileDerivedTimeSeriesGenerator as DerivedGen
 from pytorch_lightning import Trainer
 
 trainer = Trainer(accelerator='cpu')
 
-
-
-
-data_name, group = DATA_GROUPS[4]
+data_name, group = DATA_GROUPS[5]
 print(data_name, group)
 
 # LOADING DATA AND SETUP
@@ -72,31 +68,8 @@ for tsgen in SYNTH_METHODS:
 
 training_sets['original'] = train.copy()
 
-# Derivation method 
+# METHOD
 
-derived_gen = DerivedGen(n_quantiles=10,
-                    ensemble_transitions=False,
-                    )
-
-
-derived_gen_ensemble = DerivedGen(n_quantiles=10,
-                    ensemble_transitions=True,
-                    ensemble_size= 10
-                    )
-
-derived_gen = derived_gen.transform(train)
-derived_gen_ensemble_df = derived_gen_ensemble.transform(train)
-
-train_derived = pd.concat([train, derived_gen]).reset_index(drop=True)
-train_derived_e = pd.concat([train, derived_gen_ensemble_df]).reset_index(drop=True)
-
-
-training_sets['derived'] = train_derived
-training_sets['derived_ensemble'] = train_derived_e
-
-
-
-# Original setup
 qgts_gen = QGTSGen(n_quantiles=10,
                    quantile_on='remainder',
                    period=freq_int,
@@ -114,10 +87,117 @@ qgtse_df = qgtse_gen.transform(train)
 train_qgts = pd.concat([train, qgts_df]).reset_index(drop=True)
 train_qgtse = pd.concat([train, qgtse_df]).reset_index(drop=True)
 
+training_sets['qgts(10)'] = train_qgts
+training_sets['qgtse(10)'] = train_qgtse
 
-training_sets['qgts_10'] = train_qgts
-training_sets['qgtse_10'] = train_qgtse
+# METHOD
 
+qgts_gen = QGTSGen(n_quantiles=5,
+                   quantile_on='remainder',
+                   period=freq_int,
+                   ensemble_transitions=False)
+
+qgtse_gen = QGTSGen(n_quantiles=10,
+                    quantile_on='remainder',
+                    period=freq_int,
+                    ensemble_size=5,
+                    ensemble_transitions=True)
+
+qgts_df = qgts_gen.transform(train)
+qgtse_df = qgtse_gen.transform(train)
+
+train_qgts = pd.concat([train, qgts_df]).reset_index(drop=True)
+train_qgtse = pd.concat([train, qgtse_df]).reset_index(drop=True)
+
+training_sets['qgts(5)'] = train_qgts
+training_sets['qgtse(5)'] = train_qgtse
+
+#############################
+qgts_gen = QGTSGen(n_quantiles=25,
+                   quantile_on='remainder',
+                   period=freq_int,
+                   ensemble_transitions=False)
+
+qgtse_gen = QGTSGen(n_quantiles=10,
+                    quantile_on='remainder',
+                    period=freq_int, 
+                    ensemble_size=25,
+                    ensemble_transitions=True)
+
+qgts_df = qgts_gen.transform(train)
+qgtse_df = qgtse_gen.transform(train)
+
+train_qgts = pd.concat([train, qgts_df]).reset_index(drop=True)
+train_qgtse = pd.concat([train, qgtse_df]).reset_index(drop=True)
+
+training_sets['qgts(25)'] = train_qgts
+training_sets['qgtse(25)'] = train_qgtse
+
+
+########################
+
+qgts_gen = QGTSGen(n_quantiles=50,
+                   quantile_on='remainder',
+                   period=freq_int,
+                   ensemble_transitions=False)
+
+qgtse_gen = QGTSGen(n_quantiles=10,
+                    quantile_on='remainder',
+                    period=freq_int, 
+                    ensemble_size=50,
+                    ensemble_transitions=True)
+
+qgts_df = qgts_gen.transform(train)
+qgtse_df = qgtse_gen.transform(train)
+
+train_qgts = pd.concat([train, qgts_df]).reset_index(drop=True)
+train_qgtse = pd.concat([train, qgtse_df]).reset_index(drop=True)
+
+training_sets['qgts(50)'] = train_qgts
+training_sets['qgtse(50)'] = train_qgtse
+
+########################
+qgts_gen = QGTSGen(n_quantiles=100,
+                   quantile_on='remainder',
+                   period=freq_int,
+                   ensemble_transitions=False)
+
+qgtse_gen = QGTSGen(n_quantiles=10,
+                    quantile_on='remainder',
+                    period=freq_int, 
+                    ensemble_size=100,
+                    ensemble_transitions=True)
+
+qgts_df = qgts_gen.transform(train)
+qgtse_df = qgtse_gen.transform(train)
+
+train_qgts = pd.concat([train, qgts_df]).reset_index(drop=True)
+train_qgtse = pd.concat([train, qgtse_df]).reset_index(drop=True)
+
+training_sets['qgts(100)'] = train_qgts
+training_sets['qgtse(100)'] = train_qgtse
+
+###################
+
+qgts_gen = QGTSGen(n_quantiles=200,
+                   quantile_on='remainder',
+                   period=freq_int,
+                   ensemble_transitions=False)
+
+qgtse_gen = QGTSGen(n_quantiles=10,
+                    quantile_on='remainder',
+                    period=freq_int, 
+                    ensemble_size=200,
+                    ensemble_transitions=True)
+
+qgts_df = qgts_gen.transform(train)
+qgtse_df = qgtse_gen.transform(train)
+
+train_qgts = pd.concat([train, qgts_df]).reset_index(drop=True)
+train_qgtse = pd.concat([train, qgtse_df]).reset_index(drop=True)
+
+training_sets['qgts(200)'] = train_qgts
+training_sets['qgtse(200)'] = train_qgtse
 
 
 # MODELING

@@ -35,8 +35,12 @@ df.groupby('ds').mean(numeric_only=True)
 df.groupby('ds').mean(numeric_only=True).rank(axis=1).mean().sort_values()
 
 
+a = df.query('model=="NHITS"').groupby('ds').mean(numeric_only=True)
 
-df.query('model=="NHITS"').groupby('ds').mean(numeric_only=True)
+
+b=df.query('model=="NHITS"').drop(columns=['model','ds'])
+b.rank(axis=1).mean().sort_values()
+
 df.query('model=="NHITS"').groupby('ds').mean(numeric_only=True).rank(axis=1).mean().sort_values()
 
 df.query('model=="NHITS"').drop(columns=['ds','model']).rank(axis=1).mean().sort_values()
