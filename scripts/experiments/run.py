@@ -26,7 +26,7 @@ trainer = Trainer(accelerator='cpu')
 
 
 
-data_name, group = DATA_GROUPS[4]
+data_name, group = DATA_GROUPS[3]
 print(data_name, group)
 
 # LOADING DATA AND SETUP
