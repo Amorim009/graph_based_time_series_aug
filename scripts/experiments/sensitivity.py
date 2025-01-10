@@ -23,7 +23,7 @@ from pytorch_lightning import Trainer
 
 trainer = Trainer(accelerator='cpu')
 
-data_name, group = DATA_GROUPS[4]
+data_name, group = DATA_GROUPS[5]
 print(data_name, group)
 
 # LOADING DATA AND SETUP
@@ -71,15 +71,15 @@ training_sets['original'] = train.copy()
 
 # METHOD
 
-qgts_gen = QGTSGen(n_quantiles=10,
+qgts_gen = QGTSGen(n_quantiles=25,
                    quantile_on='remainder',
                    period=freq_int,
                    ensemble_transitions=False)
 
-qgtse_gen = QGTSGen(n_quantiles=10,
+qgtse_gen = QGTSGen(n_quantiles=25,
                     quantile_on='remainder',
                     period=freq_int, 
-                    ensemble_size=10,
+                    ensemble_size=50,
                     ensemble_transitions=True)
 
 qgts_df = qgts_gen.transform(train)
@@ -88,9 +88,10 @@ qgtse_df = qgtse_gen.transform(train)
 train_qgts = pd.concat([train, qgts_df]).reset_index(drop=True)
 train_qgtse = pd.concat([train, qgtse_df]).reset_index(drop=True)
 
-training_sets['qgts(10)'] = train_qgts
-training_sets['qgtse(10)'] = train_qgtse
+training_sets['qgts(25)'] = train_qgts
+training_sets['qgtse(50)'] = train_qgtse
 
+'''
 # METHOD
 
 qgts_gen = QGTSGen(n_quantiles=5,
@@ -201,143 +202,7 @@ training_sets['qgts(200)'] = train_qgts
 training_sets['qgtse(200)'] = train_qgtse
 ############################################################
 
-
-# Derivation method 
-
-derived_gen = DerivedGen(n_quantiles=10,
-                    ensemble_transitions=False,
-                    )
-
-
-derived_gen_ensemble = DerivedGen(n_quantiles=10,
-                    ensemble_transitions=True,
-                    ensemble_size= 10
-                    )
-
-derived_gen = derived_gen.transform(train)
-derived_gen_ensemble_df = derived_gen_ensemble.transform(train)
-
-train_derived = pd.concat([train, derived_gen]).reset_index(drop=True)
-train_derived_e = pd.concat([train, derived_gen_ensemble_df]).reset_index(drop=True)
-
-
-training_sets['derived(10)'] = train_derived
-training_sets['derived_ensemble(10)'] = train_derived_e
-##################################################################
-
-
-derived_gen = DerivedGen(n_quantiles=5,
-                    ensemble_transitions=False,
-                    )
-
-
-derived_gen_ensemble = DerivedGen(n_quantiles=10,
-                    ensemble_transitions=True,
-                    ensemble_size= 5
-                    )
-
-derived_gen = derived_gen.transform(train)
-derived_gen_ensemble_df = derived_gen_ensemble.transform(train)
-
-train_derived = pd.concat([train, derived_gen]).reset_index(drop=True)
-train_derived_e = pd.concat([train, derived_gen_ensemble_df]).reset_index(drop=True)
-
-
-training_sets['derived(5)'] = train_derived
-training_sets['derived_ensemble(5)'] = train_derived_e
-
-
-#################################################
-
-derived_gen = DerivedGen(n_quantiles=25,
-                    ensemble_transitions=False,
-                    )
-
-
-derived_gen_ensemble = DerivedGen(n_quantiles=10,
-                    ensemble_transitions=True,
-                    ensemble_size= 25
-                    )
-
-derived_gen = derived_gen.transform(train)
-derived_gen_ensemble_df = derived_gen_ensemble.transform(train)
-
-train_derived = pd.concat([train, derived_gen]).reset_index(drop=True)
-train_derived_e = pd.concat([train, derived_gen_ensemble_df]).reset_index(drop=True)
-
-
-training_sets['derived(25)'] = train_derived
-training_sets['derived_ensemble(25)'] = train_derived_e
-
-#######################################
-
-derived_gen = DerivedGen(n_quantiles=50,
-                    ensemble_transitions=False,
-                    )
-
-
-derived_gen_ensemble = DerivedGen(n_quantiles=10,
-                    ensemble_transitions=True,
-                    ensemble_size= 50
-                    )
-
-derived_gen = derived_gen.transform(train)
-derived_gen_ensemble_df = derived_gen_ensemble.transform(train)
-
-train_derived = pd.concat([train, derived_gen]).reset_index(drop=True)
-train_derived_e = pd.concat([train, derived_gen_ensemble_df]).reset_index(drop=True)
-
-
-training_sets['derived(50)'] = train_derived
-training_sets['derived_ensemble(50)'] = train_derived_e
-
-
-#######################################
-
-derived_gen = DerivedGen(n_quantiles=100,
-                    ensemble_transitions=False,
-                    )
-
-
-derived_gen_ensemble = DerivedGen(n_quantiles=10,
-                    ensemble_transitions=True,
-                    ensemble_size= 100
-                    )
-
-derived_gen = derived_gen.transform(train)
-derived_gen_ensemble_df = derived_gen_ensemble.transform(train)
-
-train_derived = pd.concat([train, derived_gen]).reset_index(drop=True)
-train_derived_e = pd.concat([train, derived_gen_ensemble_df]).reset_index(drop=True)
-
-
-training_sets['derived(100)'] = train_derived
-training_sets['derived_ensemble(100)'] = train_derived_e
-
-
-
-#######################################
-
-derived_gen = DerivedGen(n_quantiles=200,
-                    ensemble_transitions=False,
-                    )
-
-
-derived_gen_ensemble = DerivedGen(n_quantiles=10,
-                    ensemble_transitions=True,
-                    ensemble_size= 200
-                    )
-
-derived_gen = derived_gen.transform(train)
-derived_gen_ensemble_df = derived_gen_ensemble.transform(train)
-
-train_derived = pd.concat([train, derived_gen]).reset_index(drop=True)
-train_derived_e = pd.concat([train, derived_gen_ensemble_df]).reset_index(drop=True)
-
-
-training_sets['derived(200)'] = train_derived
-training_sets['derived_ensemble(200)'] = train_derived_e
-
+'''
 
 # MODELING
 
