@@ -10,7 +10,7 @@ from pytorch_lightning import Trainer
 
 trainer = Trainer(accelerator='cpu')
 
-MODEL = 'MLP'
+MODEL = 'KAN'
 ACCELERATOR = 'cpu'
 
 MODELS = {

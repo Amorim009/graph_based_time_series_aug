@@ -23,7 +23,7 @@ from pytorch_lightning import Trainer
 
 trainer = Trainer(accelerator='cpu')
 
-data_name, group = DATA_GROUPS[0]
+data_name, group = DATA_GROUPS[5]
 print(data_name, group)
 
 # LOADING DATA AND SETUP
