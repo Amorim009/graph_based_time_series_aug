@@ -236,6 +236,7 @@ class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
 
         return decomposed_df
 
+
 class QuantileDerivedTimeSeriesGenerator(SemiSyntheticGenerator):
     def __init__(self, n_quantiles: int, ensemble_transitions: bool, ensemble_size: int = 0):
 
@@ -250,11 +251,9 @@ class QuantileDerivedTimeSeriesGenerator(SemiSyntheticGenerator):
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         df_ = df.copy()
 
-
         df_diff = self._difference_series(df_)
 
         df_diff['Quantile'] = self._get_quantiles(df_diff)
- 
 
         self._calc_transition_matrix(df_diff)
         if self.ensemble_transitions:
@@ -264,7 +263,6 @@ class QuantileDerivedTimeSeriesGenerator(SemiSyntheticGenerator):
         synth_df = self._integrate_series(df_diff, synth_ts_dict)
 
         return synth_df
-
 
     def _difference_series(self, df: pd.DataFrame) -> pd.DataFrame:
 
@@ -282,7 +280,6 @@ class QuantileDerivedTimeSeriesGenerator(SemiSyntheticGenerator):
 
         return quantiles
 
-
     def _calc_transition_matrix(self, df: pd.DataFrame):
         assert 'Quantile' in df.columns
 
@@ -296,20 +293,16 @@ class QuantileDerivedTimeSeriesGenerator(SemiSyntheticGenerator):
                 next_quantile = quantiles[i + 1]
                 t_count_matrix[current_quantile, next_quantile] += 1
 
-          
             t_prob_matrix = t_count_matrix / t_count_matrix.sum(axis=1, keepdims=True)
-            t_prob_matrix = np.nan_to_num(t_prob_matrix)  
+            t_prob_matrix = np.nan_to_num(t_prob_matrix)
 
-    
             for row in range(self.n_quantiles):
-                if np.sum(t_count_matrix[row]) == 0:  
+                if np.sum(t_count_matrix[row]) == 0:
                     t_prob_matrix[row] = np.ones(self.n_quantiles) / self.n_quantiles
 
             self.transition_mats[unique_id] = t_prob_matrix
 
         return self.transition_mats
-
-
 
     def _create_synthetic_ts(self, df: pd.DataFrame) -> Dict:
         quantile_series = self._generate_quantile_series(df)
@@ -338,9 +331,6 @@ class QuantileDerivedTimeSeriesGenerator(SemiSyntheticGenerator):
             generated_time_series[uid] = pd.Series(synth_ts, index=uid_df.index)
 
         return generated_time_series
-
-
-
 
     def _get_ensemble_transition_mats(self):
         mats = copy.deepcopy(self.transition_mats)
@@ -375,15 +365,13 @@ class QuantileDerivedTimeSeriesGenerator(SemiSyntheticGenerator):
 
         return ensemble_mats
 
-
-
     def _integrate_series(self, df: pd.DataFrame, synth_diff_dict: Dict) -> pd.DataFrame:
         """
         Integrate the synthetic differenced series to reconstruct the original scale.
         """
         synth_list = []
         for uid, group in df.groupby('unique_id'):
-            original_y = group['y'].iloc[0]  
+            original_y = group['y'].iloc[0]
             synth_diff = synth_diff_dict[uid]
 
             synthetic_y = np.cumsum(np.insert(synth_diff.values, 0, original_y))[:-1]
@@ -391,14 +379,12 @@ class QuantileDerivedTimeSeriesGenerator(SemiSyntheticGenerator):
             group['y'] = synthetic_y
             group['y'] = group['y'].fillna(method='ffill')
             synth_list.append(group)
-        
+
         synth_df = pd.concat(synth_list)
         synth_df['unique_id'] = synth_df['unique_id'].apply(lambda x: f'{self.alias}_{x}')
         synth_df = synth_df[['ds', 'unique_id', 'y']]
         synth_df['y'] = synth_df['y'].fillna(method='ffill')
         return synth_df[['ds', 'unique_id', 'y']]
-
-
 
     def _generate_quantile_series(self, df: pd.DataFrame):
         uids = df['unique_id'].unique().tolist()

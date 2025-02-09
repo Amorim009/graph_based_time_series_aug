@@ -11,8 +11,11 @@ DATASETS = {
 DATA_GROUPS = [
     ('Gluonts', 'm1_monthly'),
     ('Gluonts', 'm1_quarterly'),
-    ('M3', 'Monthly'),  
+    ('M3', 'Monthly'),
     ('M3', 'Quarterly'),
     ('Tourism', 'Monthly'),
     ('Tourism', 'Quarterly'),
+    ('Gluonts', 'nn5_weekly'),
+    ('Gluonts', 'electricity_weekly'),
+    ('Gluonts', 'australian_electricity_demand'),
 ]

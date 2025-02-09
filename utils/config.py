@@ -6,12 +6,8 @@ from metaforecast.synth import (SeasonalMBB,
                                 TimeWarping,
                                 DBA,
                                 TSMixup)
-from pytorch_lightning import Trainer
 
-trainer = Trainer(accelerator='cpu')
-
-MODEL = 'KAN'
-ACCELERATOR = 'cpu'
+ACCELERATOR = 'mps'
 
 MODELS = {
     'NHITS': NHITS,
@@ -24,18 +20,15 @@ MODEL_CONFIG = {
         'start_padding_enabled': False,
         'accelerator': ACCELERATOR,
         'scaler_type': 'standard',
-        'max_steps': 1000,
     },
     'MLP': {
         'start_padding_enabled': False,
         'accelerator': ACCELERATOR,
         'scaler_type': 'standard',
-        'max_steps': 1000,
     },
     'KAN': {
         'accelerator': ACCELERATOR,
         'scaler_type': 'standard',
-        'max_steps': 1000,
     },
 
 }
