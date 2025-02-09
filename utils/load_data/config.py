@@ -15,7 +15,4 @@ DATA_GROUPS = [
     ('M3', 'Quarterly'),
     ('Tourism', 'Monthly'),
     ('Tourism', 'Quarterly'),
-    ('Gluonts', 'nn5_weekly'),
-    ('Gluonts', 'electricity_weekly'),
-    ('Gluonts', 'australian_electricity_demand'),
 ]

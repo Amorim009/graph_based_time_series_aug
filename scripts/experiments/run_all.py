@@ -16,7 +16,7 @@ from utils.load_data.base import LoadDataset
 from src.qgraph_ts import QuantileGraphTimeSeriesGenerator as QGTSGen
 from src.qgraph_ts import QuantileDerivedTimeSeriesGenerator as DerivedGen
 
-data_name, group = DATA_GROUPS[7]
+data_name, group = DATA_GROUPS[0]
 print(data_name, group)
 MODEL = 'NHITS'
 N_QUANTILES = 25
@@ -126,6 +126,7 @@ evaluation_df = evaluate(test_with_fcst, [partial(mase, seasonality=freq_int), s
 
 evaluation_df.to_csv(f'assets/results/{data_name}_{group}_{MODEL}.csv', index=False)
 
-print(evaluation_df.query('metric=="mase"').mean(numeric_only=True))
-print(evaluation_df.query('metric=="smape"').mean(numeric_only=True))
-print(evaluation_df.mean(numeric_only=True))
+
+print(evaluation_df.query('metric=="mase"').mean(numeric_only=True).sort_values())
+print(evaluation_df.query('metric=="smape"').mean(numeric_only=True).sort_values())
+print(evaluation_df.mean(numeric_only=True).sort_values())

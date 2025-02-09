@@ -32,6 +32,26 @@ class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
         self.ensemble_size = ensemble_size
         self.ensemble_transition_mats = {}
 
+    def matrix_to_edgelist(self, uid: str, threshold=0):
+
+        adj_matrix = self.transition_mats[uid]
+
+        # mask for edges above threshold
+        mask = adj_matrix > threshold
+
+        from_idx, to_idx = np.nonzero(mask)
+
+        weights = adj_matrix[from_idx, to_idx]
+
+        # Create DataFrame
+        edge_list = pd.DataFrame({
+            'from': from_idx,
+            'to': to_idx,
+            'weight': weights
+        })
+
+        return edge_list
+
     def transform(self, df: pd.DataFrame, **kwargs):
 
         # df2 = self.diff(df)
