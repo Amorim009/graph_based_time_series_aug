@@ -119,6 +119,9 @@ for data_name, group in DATA_GROUPS:
         for tsgen, train_df_ in training_sets.items():
             model_params = MODEL_CONFIG.get(model)
             model_conf = {**input_data, **model_params}
+            if model.startswith("Auto"):
+                # model_conf = {'h': horizon, 'num_samples':2}
+                model_conf = {'h': horizon}
 
             nf = NeuralForecast(models=[MODELS[model](**model_conf, alias=tsgen)], freq=freq_str)
             nf.fit(df=train_df_, val_size=horizon)

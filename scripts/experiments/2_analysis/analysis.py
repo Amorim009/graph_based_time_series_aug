@@ -38,17 +38,21 @@ df = df[['Original', 'Grasynda', 'Grasynda(E)', 'DBA',
          'SNaive', 'ds', 'model']]
 
 # overall details on table
-perf_by_all = df.groupby(['ds', 'model']).mean(numeric_only=True)
+perf_by_all = df.groupby(['model','ds']).mean(numeric_only=True)
+
+avg_perf = perf_by_all.reset_index().groupby('model').mean(numeric_only=True)
+avg_rank = perf_by_all.rank(axis=1).reset_index(level='model').groupby('model').mean(numeric_only=True).round(2)
 
 og = perf_by_all['Original']
 effectiveness = perf_by_all.apply(lambda x: (x < og).astype(int), axis=0).mean()
 
 # perf_by_mod = df.groupby(['model']).mean(numeric_only=True)
 # avg_score = perf_by_mod.mean().values
-avg_rank = perf_by_all.rank(axis=1).mean().round(2).values
+
+# avg_rank = perf_by_all.rank(axis=1).mean().round(2).values
 
 # perf_by_mod.loc[('All', 'Average'), :] = avg_score
-perf_by_all.loc[('All', 'Avg. Rank'), :] = avg_rank
+# perf_by_all.loc[('All', 'Avg. Rank'), :] = avg_rank
 perf_by_all.loc[('All', 'Effectiveness'), :] = effectiveness.round(2)
 
 perf_by_all.index = pd.MultiIndex.from_tuples(
@@ -59,15 +63,15 @@ tex_tab = to_latex_tab(perf_by_all, 4, rotate_cols=True)
 print(tex_tab)
 
 # grouped bar plot
-# x=operation, y= average score, group=model
-scores = df.groupby(['model', 'operation']).mean(numeric_only=True)['Online']
-scores_df = scores.reset_index()
-scores_df.columns = ['Model', 'Method', 'MASE']
+ord = avg_rank.mean().sort_values().index.tolist()
+scores_df = avg_rank.reset_index().melt('model')
+scores_df.columns = ['Model', 'Method', 'Average Rank']
+scores_df['Method'] = pd.Categorical(scores_df['Method'], categories=ord)
 
 plot = \
     p9.ggplot(data=scores_df,
               mapping=p9.aes(x='Model',
-                             y='MASE',
+                             y='Average Rank',
                              fill='Method')) + \
     p9.geom_bar(position='dodge',
                 stat='identity',
@@ -76,79 +80,7 @@ plot = \
     p9.theme(axis_title_y=p9.element_text(size=12),
              axis_title_x=p9.element_blank(),
              axis_text=p9.element_text(size=12)) + \
-    p9.scale_fill_manual(values=COLORS)
+    p9.scale_fill_manual(values=APPROACH_COLORS)
 
-plot.save('mase_by_model_op.pdf', height=5, width=12)
+plot.save('assets/results/outputs/mase_by_model_op.pdf', height=5, width=12)
 
-#
-
-ds_perf = df.groupby(['ds', 'operation']).mean(numeric_only=True)['Online'].reset_index()
-ds_perf.columns = ['Dataset', 'Method', 'MASE']
-
-plot = \
-    p9.ggplot(data=ds_perf,
-              mapping=p9.aes(x='Method',
-                             y='MASE',
-                             fill='Method')) + \
-    p9.facet_wrap('~Dataset', nrow=2) + \
-    p9.geom_bar(position='dodge',
-                stat='identity',
-                width=0.9) + \
-    THEME + \
-    p9.theme(axis_title_y=p9.element_text(size=12),
-             axis_title_x=p9.element_blank(),
-             axis_text=p9.element_text(size=12),
-             axis_text_x=p9.element_text(angle=60)) + \
-    p9.scale_fill_manual(values=COLORS)
-
-plot.save('mase_by_model_ds.pdf', height=7, width=12)
-
-#
-
-ds_perf = df.groupby(['ds']).mean(numeric_only=True).drop(columns='Offline(=,E)').reset_index().melt('ds')
-ds_perf.columns = ['Dataset', 'Approach', 'MASE']
-
-plot = \
-    p9.ggplot(data=ds_perf,
-              mapping=p9.aes(x='Approach',
-                             y='MASE',
-                             fill='Approach')) + \
-    p9.facet_wrap('~Dataset', nrow=2) + \
-    p9.geom_bar(position='dodge',
-                stat='identity',
-                width=0.9) + \
-    THEME + \
-    p9.theme(axis_title_y=p9.element_text(size=12),
-             axis_title_x=p9.element_blank(),
-             axis_text=p9.element_text(size=12),
-             axis_text_x=p9.element_text(angle=60)) + \
-    p9.scale_fill_manual(values=APPROACH_COLORES)
-
-plot.save('mase_by_approach_ds.pdf', height=7, width=12)
-
-# effectiveness
-
-df_eff = df.groupby(['ds', 'operation', 'model']).mean(numeric_only=True)
-
-effectiveness = \
-    pd.concat({c: df_eff[c] < df_eff['Original']
-               for c in df_eff.columns if c not in ['Original', 'Naive']}, axis=1)
-
-effect_df = effectiveness.mean().reset_index()
-effect_df.columns = ['Method', 'Effectiveness']
-effect_df['Method'] = pd.Categorical(effect_df['Method'], categories=effect_df['Method'])
-
-plot = \
-    p9.ggplot(data=effect_df,
-              mapping=p9.aes(x='Method',
-                             y='Effectiveness')) + \
-    p9.geom_bar(position='dodge',
-                stat='identity',
-                width=0.9,
-                fill='#0b3b24') + \
-    THEME + \
-    p9.theme(axis_title_y=p9.element_text(size=14),
-             axis_text=p9.element_text(size=13)) + \
-    p9.labs(x='')
-
-plot.save('effectiveness.pdf', width=10, height=4)
