@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -18,13 +20,18 @@ from src.qgraph_ts import QuantileDerivedTimeSeriesGenerator as DerivedGen
 
 N_QUANTILES = 25
 ENSEMBLE_SIZE = 50
-RESULTS_DIR = 'assets/results/{ds}_{group}_{model}.csv'
+RESULTS_DIR = 'assets/results/csv/{ds}-{group},{model}.csv'
 
 for data_name, group in DATA_GROUPS:
     # data_name, group = DATA_GROUPS[0]
     print(data_name, group)
 
     for model in [*MODELS]:
+
+        fp = RESULTS_DIR.format(ds=data_name, group=group, model=model)
+
+        if os.path.exists(fp):
+            continue
 
         # MODEL = 'NHITS'
 
@@ -130,8 +137,7 @@ for data_name, group in DATA_GROUPS:
         # EVALUATION
         evaluation_df = evaluate(test_with_fcst, [partial(mase, seasonality=freq_int), smape], train_df=train)
 
-        # evaluation_df.to_csv(f'assets/results/{data_name}_{group}_{model}.csv', index=False)
-        evaluation_df.to_csv(RESULTS_DIR.format(data_name, group, model), index=False)
+        evaluation_df.to_csv(fp, index=False)
 
         print(evaluation_df.query('metric=="mase"').mean(numeric_only=True).sort_values())
         print(evaluation_df.query('metric=="smape"').mean(numeric_only=True).sort_values())
