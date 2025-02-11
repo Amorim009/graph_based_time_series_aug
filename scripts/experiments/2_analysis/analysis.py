@@ -9,9 +9,12 @@ COLUMN_MAP = {
     'MagnitudeWarping': 'M-Warp',
     'TimeWarping': 'T-Warp',
     'SeasonalMBB': 'MBB',
+    'Jittering': 'Jitter',
     'original': 'Original',
     'SeasonalNaive': 'SNaive',
     'derived': 'QGTS(D)',
+    'QGTSE': 'Grasynda(E)',
+    'QGTS': 'Grasynda',
 }
 
 APPROACH_COLORS = [
@@ -26,19 +29,27 @@ APPROACH_COLORS = [
     '#472d54',  # Deep purple
     '#855988',  # Muted mauve
     '#2d5447',  # Forest green
-    '#507e6d'   # Sage green
+    '#507e6d'  # Sage green
 ]
 
 df = df.rename(columns=COLUMN_MAP)
+df = df[['Original', 'Grasynda', 'Grasynda(E)', 'DBA',
+         'Jitter', 'M-Warp', 'MBB', 'Scaling', 'T-Warp', 'TSMixup',
+         'SNaive', 'ds', 'model']]
 
 # overall details on table
 perf_by_all = df.groupby(['ds', 'model']).mean(numeric_only=True)
+
+og = perf_by_all['Original']
+effectiveness = perf_by_all.apply(lambda x: (x < og).astype(int), axis=0).mean()
+
 # perf_by_mod = df.groupby(['model']).mean(numeric_only=True)
 # avg_score = perf_by_mod.mean().values
 avg_rank = perf_by_all.rank(axis=1).mean().round(2).values
 
 # perf_by_mod.loc[('All', 'Average'), :] = avg_score
 perf_by_all.loc[('All', 'Avg. Rank'), :] = avg_rank
+perf_by_all.loc[('All', 'Effectiveness'), :] = effectiveness.round(2)
 
 perf_by_all.index = pd.MultiIndex.from_tuples(
     [(f'\\rotatebox{{90}}{{{x[0]}}}', x[1]) for x in perf_by_all.index]
@@ -46,7 +57,6 @@ perf_by_all.index = pd.MultiIndex.from_tuples(
 
 tex_tab = to_latex_tab(perf_by_all, 4, rotate_cols=True)
 print(tex_tab)
-# add effectiveness
 
 # grouped bar plot
 # x=operation, y= average score, group=model
@@ -115,7 +125,6 @@ plot = \
     p9.scale_fill_manual(values=APPROACH_COLORES)
 
 plot.save('mase_by_approach_ds.pdf', height=7, width=12)
-
 
 # effectiveness
 

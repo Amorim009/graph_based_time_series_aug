@@ -29,7 +29,7 @@ THEME = p9.theme_538(base_family='Palatino', base_size=12) + \
 
 def to_latex_tab(df, round_to_n, rotate_cols: bool):
     if rotate_cols:
-        df.columns = [f'\\rotatebox{{90}}{{{x}}}' for x in df.columns]
+        df.columns = [f'\\rotatebox{{60}}{{{x}}}' for x in df.columns]
 
     annotated_res = []
     for i, r in df.round(round_to_n).iterrows():
