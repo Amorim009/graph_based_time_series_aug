@@ -1,5 +1,5 @@
 from neuralforecast.models import NHITS, MLP, KAN
-from neuralforecast.auto import AutoMLP
+from neuralforecast.auto import AutoMLP, AutoNHITS, AutoKAN
 from metaforecast.synth import (SeasonalMBB,
                                 Jittering,
                                 Scaling,
@@ -15,10 +15,14 @@ MODELS = {
     'MLP': MLP,
     'KAN': KAN,
     'AutoMLP': AutoMLP,
+    'AutoNHITS': AutoNHITS,
+    'AutoKAN': AutoKAN,
 }
 
 MODEL_CONFIG = {
     'AutoMLP': {},
+    'AutoKAN': {},
+    'AutoNHITS': {},
     'NHITS': {
         'start_padding_enabled': False,
         'accelerator': ACCELERATOR,

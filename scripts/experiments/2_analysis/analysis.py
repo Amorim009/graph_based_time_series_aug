@@ -5,6 +5,9 @@ from utils.analysis import to_latex_tab, read_results, THEME
 
 df = read_results('mase')
 
+
+
+
 COLUMN_MAP = {
     'MagnitudeWarping': 'M-Warp',
     'TimeWarping': 'T-Warp',
@@ -63,8 +66,10 @@ tex_tab = to_latex_tab(perf_by_all, 4, rotate_cols=True)
 print(tex_tab)
 
 # grouped bar plot
-ord = avg_rank.mean().sort_values().index.tolist()
-scores_df = avg_rank.reset_index().melt('model')
+# ord = avg_rank.mean().sort_values().index.tolist()
+ord = avg_perf.mean().sort_values().index.tolist()
+# scores_df = avg_rank.reset_index().melt('model')
+scores_df = avg_perf.reset_index().melt('model')
 scores_df.columns = ['Model', 'Method', 'Average Rank']
 scores_df['Method'] = pd.Categorical(scores_df['Method'], categories=ord)
 
@@ -82,5 +87,5 @@ plot = \
              axis_text=p9.element_text(size=12)) + \
     p9.scale_fill_manual(values=APPROACH_COLORS)
 
-plot.save('assets/results/outputs/mase_by_model_op.pdf', height=5, width=12)
+plot.save('assets/results/outputs/mase_by_model_op2.pdf', height=5, width=12)
 
