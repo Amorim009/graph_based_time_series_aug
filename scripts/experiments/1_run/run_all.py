@@ -15,8 +15,7 @@ from utils.load_data.config import DATA_GROUPS
 from utils.config import SYNTH_METHODS, MODEL_CONFIG, MODELS
 from src.workflow import ExpWorkflow
 from utils.load_data.base import LoadDataset
-from src.qgraph_ts import QuantileGraphTimeSeriesGenerator as QGTSGen
-from src.qgraph_ts import QuantileDerivedTimeSeriesGenerator as DerivedGen
+from src.qgraph_ts import Grasynda
 
 N_QUANTILES = 25
 ENSEMBLE_SIZE = 50
@@ -93,16 +92,16 @@ for data_name, group in DATA_GROUPS:
         training_sets['derived_ensemble'] = train_derived_e
 
         # QGTS
-        qgts_gen = QGTSGen(n_quantiles=N_QUANTILES,
-                           quantile_on='remainder',
-                           period=freq_int,
-                           ensemble_transitions=False)
-
-        qgtse_gen = QGTSGen(n_quantiles=N_QUANTILES,
+        qgts_gen = Grasynda(n_quantiles=N_QUANTILES,
                             quantile_on='remainder',
                             period=freq_int,
-                            ensemble_size=ENSEMBLE_SIZE,
-                            ensemble_transitions=True)
+                            ensemble_transitions=False)
+
+        qgtse_gen = Grasynda(n_quantiles=N_QUANTILES,
+                             quantile_on='remainder',
+                             period=freq_int,
+                             ensemble_size=ENSEMBLE_SIZE,
+                             ensemble_transitions=True)
 
         qgts_df = qgts_gen.transform(train)
         qgtse_df = qgtse_gen.transform(train)

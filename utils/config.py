@@ -14,9 +14,9 @@ MODELS = {
     'NHITS': NHITS,
     'MLP': MLP,
     'KAN': KAN,
-    'AutoMLP': AutoMLP,
-    'AutoNHITS': AutoNHITS,
-    'AutoKAN': AutoKAN,
+    # 'AutoMLP': AutoMLP,
+    # 'AutoNHITS': AutoNHITS,
+    # 'AutoKAN': AutoKAN,
 }
 
 MODEL_CONFIG = {
@@ -24,12 +24,12 @@ MODEL_CONFIG = {
     'AutoKAN': {},
     'AutoNHITS': {},
     'NHITS': {
-        'start_padding_enabled': False,
+        # 'start_padding_enabled': False,
         'accelerator': ACCELERATOR,
         'scaler_type': 'standard',
     },
     'MLP': {
-        'start_padding_enabled': False,
+        # 'start_padding_enabled': False,
         'accelerator': ACCELERATOR,
         'scaler_type': 'standard',
     },
@@ -37,7 +37,6 @@ MODEL_CONFIG = {
         'accelerator': ACCELERATOR,
         'scaler_type': 'standard',
     },
-
 }
 
 SYNTH_METHODS = {

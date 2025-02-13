@@ -10,7 +10,7 @@ from statsmodels.tsa.seasonal import STL
 from metaforecast.synth.generators.base import SemiSyntheticGenerator
 
 
-class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
+class Grasynda(SemiSyntheticGenerator):
 
     def __init__(self,
                  n_quantiles: int,
@@ -20,9 +20,10 @@ class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
                  ensemble_size: int = 5,
                  robust: bool = False):
 
-        super().__init__(alias='QGTS')
+        super().__init__(alias='Grasynda')
 
         self.n_quantiles = n_quantiles
+        # todo qunatile on original does not work
         self.quantile_on = quantile_on
         self.transition_mats = {}
         self.period = period
@@ -43,7 +44,6 @@ class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
 
         weights = adj_matrix[from_idx, to_idx]
 
-        # Create DataFrame
         edge_list = pd.DataFrame({
             'from': from_idx,
             'to': to_idx,
@@ -257,10 +257,10 @@ class QuantileGraphTimeSeriesGenerator(SemiSyntheticGenerator):
         return decomposed_df
 
 
-class QuantileDerivedTimeSeriesGenerator(SemiSyntheticGenerator):
+class GrasyndaDiff(SemiSyntheticGenerator):
     def __init__(self, n_quantiles: int, ensemble_transitions: bool, ensemble_size: int = 0):
 
-        super().__init__(alias='QGTS')
+        super().__init__(alias='GrasyndaDiff')
         self.n_quantiles = n_quantiles
         self.ensemble_transitions = ensemble_transitions
         self.ensemble_size = ensemble_size
