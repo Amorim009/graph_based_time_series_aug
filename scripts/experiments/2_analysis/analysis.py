@@ -4,9 +4,7 @@ import plotnine as p9
 from utils.analysis import to_latex_tab, read_results, THEME
 
 df = read_results('mase')
-
-
-
+df = df.drop(columns=['derived_ensemble', 'derived'])
 
 COLUMN_MAP = {
     'MagnitudeWarping': 'M-Warp',
@@ -41,7 +39,7 @@ df = df[['Original', 'Grasynda', 'Grasynda(E)', 'DBA',
          'SNaive', 'ds', 'model']]
 
 # overall details on table
-perf_by_all = df.groupby(['model','ds']).mean(numeric_only=True)
+perf_by_all = df.groupby(['model', 'ds']).mean(numeric_only=True)
 
 avg_perf = perf_by_all.reset_index().groupby('model').mean(numeric_only=True)
 avg_rank = perf_by_all.rank(axis=1).reset_index(level='model').groupby('model').mean(numeric_only=True).round(2)
@@ -88,4 +86,3 @@ plot = \
     p9.scale_fill_manual(values=APPROACH_COLORS)
 
 plot.save('assets/results/outputs/mase_by_model_op2.pdf', height=5, width=12)
-

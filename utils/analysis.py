@@ -4,7 +4,7 @@ import re
 import pandas as pd
 import plotnine as p9
 
-RESULTS_DIR = 'assets/results/csv'
+RESULTS_DIR = 'assets/results/main_results'
 
 DS_MAPPER = {
     'Gluonts-m1_monthly': 'M1-M',
@@ -52,12 +52,12 @@ def to_latex_tab(df, round_to_n, rotate_cols: bool):
     return text_tab
 
 
-def read_results(metric: str):
-    files = os.listdir(RESULTS_DIR)
+def read_results(metric: str, data_directory=RESULTS_DIR):
+    files = os.listdir(data_directory)
 
     results_list = []
     for file in files:
-        df_ = pd.read_csv(f'{RESULTS_DIR}/{file}')
+        df_ = pd.read_csv(f'{data_directory}/{file}')
         df_['dataset'] = file
         results_list.append(df_)
 
@@ -65,7 +65,7 @@ def read_results(metric: str):
     res = res.query(f'metric=="{metric}"')
     res = res.reset_index(drop=True)
     res[['ds', 'model']] = res['dataset'].str.split(',').apply(lambda x: pd.Series(x))
-    res = res.drop(columns=['dataset', 'metric', 'unique_id','derived_ensemble','derived'])
+    res = res.drop(columns=['dataset', 'metric', 'unique_id'])
     res['model'] = res['model'].apply(lambda x: re.sub('.csv', '', x))
     res['ds'] = res['ds'].map(DS_MAPPER)
 
