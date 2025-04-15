@@ -6,6 +6,47 @@ from utils.analysis import to_latex_tab, read_results, THEME
 df = read_results('mase')
 df = df.drop(columns=['derived_ensemble', 'derived'])
 
+
+def add_model_averages_and_ranks(df):
+    # Calculate ranks for each metric (lower values are better)
+    # Using axis=1 to rank across columns for each row
+    rank_df = df.rank(axis=1, ascending=True)
+
+    # Create a new DataFrame to store the result
+    result_dfs = []
+
+    # Process each model separately to keep data together
+    for model in df.index.get_level_values('model').unique():
+        # Extract model data
+        model_data = df.xs(model, level='model')
+        model_ranks = rank_df.xs(model, level='model')
+
+        # Calculate averages
+        model_avg = model_data.mean()
+        model_rank_avg = model_ranks.mean()
+
+        # Create average and average rank DataFrames with MultiIndex
+        avg_df = pd.DataFrame([model_avg], index=pd.MultiIndex.from_tuples([(model, 'Avg.')],
+                                                                           names=['model', 'ds']))
+        avg_rank_df = pd.DataFrame([model_rank_avg], index=pd.MultiIndex.from_tuples([(model, 'Avg. Rank')],
+                                                                                     names=['model', 'ds']))
+
+        # Add original model data with MultiIndex
+        model_with_index = pd.DataFrame(model_data.values,
+                                        index=pd.MultiIndex.from_product([[model], model_data.index],
+                                                                         names=['model', 'ds']),
+                                        columns=model_data.columns)
+
+        # Combine model data with averages (keeping them together)
+        model_result = pd.concat([model_with_index, avg_df.round(4), avg_rank_df.round(2)])
+        result_dfs.append(model_result)
+
+    # Combine all model results
+    final_result = pd.concat(result_dfs)
+
+    return final_result
+
+
 COLUMN_MAP = {
     'MagnitudeWarping': 'M-Warp',
     'TimeWarping': 'T-Warp',
@@ -40,12 +81,14 @@ df = df[['Original', 'Grasynda', 'Grasynda(E)', 'DBA',
 
 # overall details on table
 perf_by_all = df.groupby(['model', 'ds']).mean(numeric_only=True)
+og = perf_by_all['Original']
+effectiveness = perf_by_all.apply(lambda x: (x < og).astype(int), axis=0).mean()
+perf_by_all_ext = add_model_averages_and_ranks(df=perf_by_all).sort_index(level=['model'], ascending=[False])
 
 avg_perf = perf_by_all.reset_index().groupby('model').mean(numeric_only=True)
 avg_rank = perf_by_all.rank(axis=1).reset_index(level='model').groupby('model').mean(numeric_only=True).round(2)
-
-og = perf_by_all['Original']
-effectiveness = perf_by_all.apply(lambda x: (x < og).astype(int), axis=0).mean()
+avg_rank_ds = perf_by_all.rank(axis=1).reset_index(level='ds').groupby('ds').mean(numeric_only=True).round(2)
+avg_perf_ds = perf_by_all.reset_index().groupby('ds').mean(numeric_only=True)
 
 # perf_by_mod = df.groupby(['model']).mean(numeric_only=True)
 # avg_score = perf_by_mod.mean().values
@@ -54,28 +97,36 @@ effectiveness = perf_by_all.apply(lambda x: (x < og).astype(int), axis=0).mean()
 
 # perf_by_mod.loc[('All', 'Average'), :] = avg_score
 # perf_by_all.loc[('All', 'Avg. Rank'), :] = avg_rank
-perf_by_all.loc[('All', 'Effectiveness'), :] = effectiveness.round(2)
+perf_by_all_ext.loc[('All', 'Effectiveness'), :] = effectiveness.round(2)
 
 perf_by_all.index = pd.MultiIndex.from_tuples(
     [(f'\\rotatebox{{90}}{{{x[0]}}}', x[1]) for x in perf_by_all.index]
 )
 
-tex_tab = to_latex_tab(perf_by_all, 4, rotate_cols=True)
+tex_tab = to_latex_tab(perf_by_all_ext, 4, rotate_cols=True)
 print(tex_tab)
 
 # grouped bar plot
 # ord = avg_rank.mean().sort_values().index.tolist()
-ord = avg_perf.mean().sort_values().index.tolist()
+# ord = avg_rank_ds.mean().sort_values().index.tolist()
+ord = avg_perf_ds.mean().sort_values().index.tolist()
+# ord = avg_perf.mean().sort_values().index.tolist()
 # scores_df = avg_rank.reset_index().melt('model')
-scores_df = avg_perf.reset_index().melt('model')
-scores_df.columns = ['Model', 'Method', 'Average Rank']
+# scores_df = avg_rank_ds.reset_index().melt('model')
+# scores_df = avg_rank_ds.reset_index().melt('ds')
+scores_df = avg_perf_ds.reset_index().melt('ds')
+# scores_df = avg_perf.reset_index().melt('model')
+# scores_df.columns = ['Model', 'Method', 'Average Rank']
+scores_df.columns = ['Dataset', 'Method', 'MASE']
 scores_df['Method'] = pd.Categorical(scores_df['Method'], categories=ord)
 
 plot = \
     p9.ggplot(data=scores_df,
-              mapping=p9.aes(x='Model',
-                             y='Average Rank',
-                             fill='Method')) + \
+              mapping=p9.aes(
+                  # x='Model',
+                  x='Dataset',
+                  y='MASE',
+                  fill='Method')) + \
     p9.geom_bar(position='dodge',
                 stat='identity',
                 width=0.9) + \
