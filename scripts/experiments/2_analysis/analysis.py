@@ -136,4 +136,4 @@ plot = \
              axis_text=p9.element_text(size=12)) + \
     p9.scale_fill_manual(values=APPROACH_COLORS)
 
-plot.save('assets/results/outputs/mase_by_model_op2.pdf', height=5, width=12)
+# plot.save('assets/results/outputs/mase_by_model_op2.pdf', height=5, width=12)
