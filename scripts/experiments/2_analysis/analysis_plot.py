@@ -1,11 +1,13 @@
+import re
+
 import pandas as pd
 import plotnine as p9
 
 from utils.analysis import to_latex_tab, read_results, THEME
 
 import warnings
-
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
 
 df = read_results('mase')
 df = df.drop(columns=['derived_ensemble', 'derived'])
@@ -116,7 +118,7 @@ df = perf_by_all_ext.copy()
 
 df = df.round(4)
 
-annotated_res_list = []
+annotated_res = []
 for i, r in df.iterrows():
     print(i)
     top_2 = r.sort_values().unique()[:2]
@@ -129,43 +131,71 @@ for i, r in df.iterrows():
     r[r == top_2[0]] = f'\\textbf{{{best1}}}'
     r[r == top_2[1]] = f'\\underline{{{best2}}}'
 
+    r_str = r.astype(str)
 
-    star_models = []
     if i[1] not in ['Avg.', 'Avg. Rank', 'Effectiveness']:
         wilc_i = wilc_binary.loc[i]
 
-        for m_ in r.index:
+        for m_ in r_str.index:
             if m_ == 'Original':
                 continue
 
             if df.loc[i][m_] < df.loc[i]['Original']:
-                # if wilc_i[m_]:
-                #     r[m_] += '??'
-                star_models.append(m_)
+                if wilc_i[m_]:
+                    r_str[m_] = f'{r_str[m_]}*'
 
-    # star_models = ['Scaling', 'MBB']
-    # for model_key in star_models:
-    #     if model_key in r.index:  # Ensure the key exists
-            # r[model_key] = str(r[model_key]) + '*'
+    print(r_str)
 
-    if len(star_models) > 0:
-        r[star_models] = [f'{x}*' for x in r[star_models]]
+    annotated_res.append(r_str)
 
-    r = r.astype(str)
-    print(r)
+annotated_res = pd.DataFrame(annotated_res).astype(str)
 
-    annotated_res_list.append(r)
 
-annotated_res = pd.DataFrame(annotated_res_list).astype(str)
 
 annotated_res.index = pd.MultiIndex.from_tuples(
     [(f'\\rotatebox{{90}}{{{x[0]}}}', x[1]) for x in annotated_res.index]
 )
 annotated_res.columns = [f'\\rotatebox{{60}}{{{x}}}' for x in annotated_res.columns]
 
+
+
+
 text_tab = annotated_res.to_latex(caption='CAPTION', label='tab:scores_by_ds')
+print(text_tab)
+
+
+# tex_tab = to_latex_tab(perf_by_all_ext, 4, rotate_cols=False)
+# print(tex_tab)
 
 #
-
-tex_tab = to_latex_tab(text_tab, 4, rotate_cols=True)
-print(tex_tab)
+# # grouped bar plot
+# # ord = avg_rank.mean().sort_values().index.tolist()
+# # ord = avg_rank_ds.mean().sort_values().index.tolist()
+# ord = avg_perf_ds.mean().sort_values().index.tolist()
+# # ord = avg_perf.mean().sort_values().index.tolist()
+# # scores_df = avg_rank.reset_index().melt('model')
+# # scores_df = avg_rank_ds.reset_index().melt('model')
+# # scores_df = avg_rank_ds.reset_index().melt('ds')
+# scores_df = avg_perf_ds.reset_index().melt('ds')
+# # scores_df = avg_perf.reset_index().melt('model')
+# # scores_df.columns = ['Model', 'Method', 'Average Rank']
+# scores_df.columns = ['Dataset', 'Method', 'MASE']
+# scores_df['Method'] = pd.Categorical(scores_df['Method'], categories=ord)
+#
+# plot = \
+#     p9.ggplot(data=scores_df,
+#               mapping=p9.aes(
+#                   # x='Model',
+#                   x='Dataset',
+#                   y='MASE',
+#                   fill='Method')) + \
+#     p9.geom_bar(position='dodge',
+#                 stat='identity',
+#                 width=0.9) + \
+#     THEME + \
+#     p9.theme(axis_title_y=p9.element_text(size=12),
+#              axis_title_x=p9.element_blank(),
+#              axis_text=p9.element_text(size=12)) + \
+#     p9.scale_fill_manual(values=APPROACH_COLORS)
+#
+# # plot.save('assets/results/outputs/mase_by_model_op2.pdf', height=5, width=12)

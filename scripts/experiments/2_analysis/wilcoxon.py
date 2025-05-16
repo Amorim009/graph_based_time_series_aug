@@ -1,19 +1,14 @@
 import pandas as pd
 from scipy.stats import wilcoxon
-<<<<<<< HEAD
 import sys
 
-sys.path.append(r'C:\Users\lhenr\Desktop\graph_based_time_series_aug')
-=======
->>>>>>> 8963e62171a3776e6d6eabf6895fc214f2fb524e
+# sys.path.append(r'C:\Users\lhenr\Desktop\graph_based_time_series_aug')
 
 from utils.analysis import to_latex_tab, read_results, THEME
 
 df = read_results('mase')
 df = df.drop(columns=['derived_ensemble', 'derived'])
 
-
-<<<<<<< HEAD
 results = {}
 
 # Group by dataset, model
@@ -44,7 +39,7 @@ print(f"\nPreview:\n{results_df.head()}")
 
 total_entries = len(results)
 print(total_entries)
-=======
+
 df_m1q = df.query('ds=="M3-Q"')
 df_m1q_nhits = df_m1q.query('model=="NHITS"')
 
@@ -54,5 +49,3 @@ y = df_m1q['original']
 st = wilcoxon(x=x,y=y)
 st.pvalue
 
-
->>>>>>> 8963e62171a3776e6d6eabf6895fc214f2fb524e
